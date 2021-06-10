@@ -88,9 +88,8 @@ stepwise.PIC <- function (x, py, nvarmax=100, alpha=0.1)
 }
 
 
-stepwise.PICSELF <- function (x, py, nvarmax=100, alpha=0.1) 
+stepwise.PICSELF <- function (x, py, alpha, nvarmax=100) 
 {
-  alpha = 0.01
   x = as.matrix(x)
   n = nrow(x)
   npy = ncol(py)
