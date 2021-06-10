@@ -26,7 +26,69 @@
 #' py<-data3[,-1]  # possible predictors
 #' stepwise.PIC(x,py)
 
+
 stepwise.PIC <- function (x, py, nvarmax=100, alpha=0.1) 
+{
+  x = as.matrix(x)
+  n = nrow(x)
+  npy = ncol(py)
+  cpy = cpyPIC = NULL
+  icpy = 0
+  z = NULL
+  isig = T
+  icoloutz = 1:npy
+  #cat("calc.PIC-----------","\n")
+  while (isig) {
+    npicmax = npy - icpy
+    pictemp = rep(0, npicmax)
+    y = py[, icoloutz]
+    pictemp = pic.calc(x,as.matrix(y),z)
+    ctmp = order(-pictemp)[1]
+    cpytmp = icoloutz[ctmp]
+    picmaxtmp = pictemp[ctmp]
+    #cat("picmaxtmp",picmaxtmp,"\n")
+    
+    if (!is.null(z)) {
+      df = n - ncol(z)
+    } else {
+      df = n
+    }
+    
+    t <-  qt(1-alpha, df=df)
+    picthres <- sqrt(t^2/(t^2+df))
+    
+    #picthres = qt((0.5 + alpha/2), df)
+    #cat("picthres",picthres,"\n")
+    
+    if (picmaxtmp > picthres) {
+      cpy = c(cpy, cpytmp)
+      cpyPIC = c(cpyPIC, picmaxtmp)
+      #cat("cpyPIC",cpyPIC,"\n")
+      z = cbind(z, py[, cpytmp])
+
+      icoloutz = icoloutz[-ctmp]
+      icpy = icpy + 1
+      if ((npy - icpy)==0|icpy>=nvarmax) isig = F
+    } else {
+      isig = F
+      if(icpy==0&picmaxtmp>0) {cpy=cpytmp; cpyPIC=picmaxtmp; z=py[,cpytmp]}
+    }
+  }
+  #cat("calc.PW------------","\n")
+  if (!is.null(z)) {
+    out = pw.calc(x, py, cpy, cpyPIC)
+    outwt = out$pw
+    lstwt = abs(lsfit(z, x)$coef)
+    return(list(cpy = cpy, cpyPIC = cpyPIC, 
+                wt = outwt, lstwet = lstwt,
+                icpy=icpy))
+  } else {
+    message("None of the provided predictors is related to the response variable")
+  }
+}
+
+
+stepwise.PICSELF <- function (x, py, nvarmax=100, alpha=0.1) 
 {
   alpha = 0.01
   x = as.matrix(x)
